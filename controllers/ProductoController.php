@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Categoria;
 use app\models\Producto;
 use Yii;
 use yii\data\Pagination;
@@ -28,9 +29,37 @@ class ProductoController extends \yii\web\Controller
         return parent::beforeAction($action);
     }
 
+    public function sumaStock($idMarca){
+        $sumaStock = (new \yii\db\Query())
+            ->select(['sum(stock)'])
+            ->from('producto')
+            ->where(['marca_id' => $idMarca])
+            ->limit(10)
+            ->all();
+            return $sumaStock;
+    }
+    public function maxStock(){
+
+        $maxStock= (new \yii\db\Query())
+        ->select(['nombre'])
+        ->from('producto')
+        ->where(['stock' => (new \yii\db\Query())->select('max(stock )')->from('producto')])
+        //->limit(10)
+        ->all();
+    
+    return $maxStock;
+    }
+    public function stock(){
+
+        $existencia = Producto::find()->where('stock>30')->all();      
+
+        return $existencia;       
+
+    }
+  
     public function actionIndex()
     {
-        $productos = Producto::find();
+        /*$productos = Producto::find();
         $paginacion = new Pagination([
             'defaultPageSize' => 7,
             'totalCount' => $productos->count(),
@@ -44,7 +73,12 @@ class ProductoController extends \yii\web\Controller
             "message" => "Laa acion se realizo correctamente",
             "data" => $listaProducto
         ];
-        return $resultado;
+        return $productos;*/
+     
+        $idCategoria = Categoria::findOne('1');
+        return $idCategoria;
+          
     }
+    
 
 }

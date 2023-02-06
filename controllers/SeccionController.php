@@ -46,6 +46,7 @@ class SeccionController extends \yii\web\Controller
             
         }
         return $aux1;
+      
   
     }
         
