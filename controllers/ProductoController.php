@@ -17,7 +17,7 @@ class ProductoController extends \yii\web\Controller
         $behaviors["verbs"] = [
             "class" => \yii\filters\VerbFilter::class,
             "actions" => [
-                "paginacion" => ["get"],
+                "index" => ["get"],
                 "seccion-producto" => ["get"],
                 "suma-stock" => ["get"],
                 "max-stock"  => ["get"],
@@ -36,7 +36,7 @@ class ProductoController extends \yii\web\Controller
         return parent::beforeAction($action);
     }
 
-    public function actionPaginacion($pageSize = 10)
+    public function actionIndex()
     {
         $productos = Producto::find();
         $paginacion = new Pagination([
@@ -57,7 +57,7 @@ class ProductoController extends \yii\web\Controller
                 'paginaActual' => $paginaActual,
                 'PaginaSiguiente' => $paginaActual < $totalPaginas ? $paginaActual + 1 : null,
                 'totalPaginas' => $totalPaginas,
-                'pageSize' => $pageSize,
+                'pageSize' => 10,
                 'totalCount' => $paginacion->totalCount
             ]
         ];
