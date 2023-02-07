@@ -24,7 +24,7 @@ class ProductoController extends \yii\web\Controller
                 "existencia-stock" => ["get"],
                 "asignar-categoria" => ["get"],
                 "quitar-categoria" => ["get"]
-                
+
             ]
         ];
         return $behaviors;
@@ -36,7 +36,8 @@ class ProductoController extends \yii\web\Controller
         return parent::beforeAction($action);
     }
 
-    public function actionPaginacion($pageSize=10){
+    public function actionPaginacion($pageSize = 10)
+    {
         $productos = Producto::find();
         $paginacion = new Pagination([
             'defaultPageSize' => 7,
@@ -46,29 +47,30 @@ class ProductoController extends \yii\web\Controller
             ->offset($paginacion->offset)
             ->limit($paginacion->limit)
             ->all();
-            $paginaActual = $paginacion->getPage()+1;
-            $totalPaginas = $paginacion->getPageCount();
-            $resultado = [
-                'success' => true,
-                'data' => $listaProducto,
-                'pagination' => [
-                    'previousPage' => $paginaActual > 1 ? $paginaActual-1 : null,
-                    'paginaActual' => $paginaActual,
-                    'nextPage' => $paginaActual < $totalPaginas ? $paginaActual+1 : null,
-                    'totalPaginas' => $totalPaginas,
-                    'pageSize' => $pageSize,
-                    'totalCount' => $paginacion->totalCount
-                ]
-            ];
-    
- 
+        $paginaActual = $paginacion->getPage() + 1;
+        $totalPaginas = $paginacion->getPageCount();
+        $resultado = [
+            'success' => true,
+            'data' => $listaProducto,
+            'pagination' => [
+                'paginaAnterior' => $paginaActual > 1 ? $paginaActual - 1 : null,
+                'paginaActual' => $paginaActual,
+                'PaginaSiguiente' => $paginaActual < $totalPaginas ? $paginaActual + 1 : null,
+                'totalPaginas' => $totalPaginas,
+                'pageSize' => $pageSize,
+                'totalCount' => $paginacion->totalCount
+            ]
+        ];
+
+
         return $resultado;
     }
     /*Un servicio que devuelva una sección según su ID con todos los productos
         pertenecientes a la sección*/
-    public function actionSeccionProducto($idSeccion){
+    public function actionSeccionProducto($idSeccion)
+    {
         $seccion = Seccion::findOne($idSeccion);
-        if($seccion){
+        if ($seccion) {
             $productos = $seccion->getProductos()->all();
 
             $resultado = [
@@ -81,66 +83,67 @@ class ProductoController extends \yii\web\Controller
             throw new \yii\web\NotFoundHttpException('Sección no encontrada.');
         }
         return $resultado;
-
     }
-        /**Un servicio que sume la cantidad de productos de una marca (suma de
+    /**Un servicio que sume la cantidad de productos de una marca (suma de
             stocks) */
-    public function actionSumaStock($idMarca){
+    public function actionSumaStock($idMarca)
+    {
 
         $sumaStock = (new \yii\db\Query())
-            ->select(['nombre','sum(stock)'])
+            ->select(['nombre', 'sum(stock)'])
             ->from('producto')
             ->where(['marca_id' => $idMarca])
             ->groupBy('nombre')
             ->all();
-        if($sumaStock){
-            
-         
+        if ($sumaStock) {
+
+
             $resultado = [
                 'success' => true,
+                'nombre' => '',
+                'suma' =>'',
                 'message' => "Cantidad total de productos ",
                 'total' => $sumaStock
             ];
-
-        }else{
+        } else {
             throw new \yii\web\NotFoundHttpException('Marca no encontrada.');
         }
-            return $resultado;
-
+        return $resultado;
     }
     /**Un servicio que devuelva el producto con el mayor stock */
-    public function actionMaxStock(){
+    public function actionMaxStock()
+    {
 
-        $maxStock= (new \yii\db\Query())
-        ->select(['*'])
-        ->from('producto')
-        ->where(['stock' => (new \yii\db\Query())->select('max(stock )')->from('producto')])
-        ->all();
-    
+        $maxStock = (new \yii\db\Query())
+            ->select(['*'])
+            ->from('producto')
+            ->where(['stock' => (new \yii\db\Query())->select('max(stock )')->from('producto')])
+            ->all();
+
         $resultado = [
             'success' => true,
+            'maxima' =>'',
             'message' => "Lista de productos con el mayor stock .",
             'productos' => $maxStock
         ];
         return $resultado;
-
     }
-    /**Un servicio que verifique si un producto tiene stock (stock > 0) */
-    public function actionExistenciaStock(){
+    /**Un servicio que verifique si un producto tiene stock (stock > 0) mandar id como parametro*/
+    public function actionExistenciaStock()
+    {
 
-        $existencia = Producto::find()->where('stock>0')->all();      
+        $existencia = Producto::find()->where('stock>0')->all();
 
         $resultado = [
             'success' => true,
             'message' => "Lista de productos con stock > 0.",
             'productos' => $existencia
         ];
-        return $resultado;      
-
+        return $resultado;
     }
-    public function actionAsignarCategoria($producto_id,$categoria_id)
+    public function actionAsignarCategoria($producto_id, $categoria_id)
     {
-    
+
         $producto = Producto::findOne($producto_id);
         if ($producto) {
 
@@ -166,7 +169,6 @@ class ProductoController extends \yii\web\Controller
                             'code' => $e->getCode(),
                         ];
                     }
-
                 } else {
                     // Establece el código de estado como 422 para Existing link.
                     Yii::$app->getResponse()->setStatusCode(422, 'Existing link.');
@@ -176,71 +178,57 @@ class ProductoController extends \yii\web\Controller
                         'message' => 'El producto ya posee la categoría.'
                     ];
                 }
-
             } else {
                 // Si no existe lanzar error 404
                 throw new \yii\web\NotFoundHttpException('Categoría no encontrada.');
             }
-
         } else {
             // Si no existe lanzar error 404
             throw new \yii\web\NotFoundHttpException('Producto no encontrado.');
         }
         return $resultado;
     }
-    public function actionQuitarCategoria($producto_id,$categoria_id)
+    public function actionQuitarCategoria($producto_id, $categoria_id)
     {
-    
+
         $producto = Producto::findOne($producto_id);
         if ($producto) {
 
             $categoria = Categoria::findOne($categoria_id);
             if ($categoria) {
 
-                if (!$producto->getCategorias()->where("id={$categoria_id}")->one()) {
-                    // Si no existe el enlace entre el producto y la categoría
+                if ($producto->getCategorias()->where("id={$categoria_id}")->one()) {
 
                     try {
-                        // Enlaza el producto con la categoría
-                        // Usa la relación muchos a muchos del modelo Producto linea 108
-                        $producto->unlink('categorias', $categoria);
+
+                        $producto->unlink('categorias', $categoria, true);
                         $resultado = [
                             'success' => true,
-                            'message' => 'Se asigno la categoría al producto correctamente.'
+                            'message' => 'Se quito la ategoria.'
                         ];
                     } catch (Exception $e) {
-                        // Establece el código de estado como 500 para error de servidor
+
                         Yii::$app->getResponse()->setStatusCode(500);
                         $resultado = [
                             'message' => $e->getMessage(),
                             'code' => $e->getCode(),
                         ];
                     }
-
                 } else {
-                    // Establece el código de estado como 422 para Existing link.
                     Yii::$app->getResponse()->setStatusCode(422, 'Existing link.');
-                    // Si el enlace entre producto y categoría existe
                     $resultado = [
                         'success' => false,
-                        'message' => 'El producto ya posee la categoría.'
+                        'message' => 'El porducto no posee la categoria.'
                     ];
                 }
-
             } else {
-                // Si no existe lanzar error 404
+
                 throw new \yii\web\NotFoundHttpException('Categoría no encontrada.');
             }
-
         } else {
-            // Si no existe lanzar error 404
+
             throw new \yii\web\NotFoundHttpException('Producto no encontrado.');
         }
         return $resultado;
     }
-
-    
-  
-    
-
 }
