@@ -31,6 +31,7 @@ class ProductoController extends \yii\web\Controller
     }
     public function beforeAction($action)
     {
+        
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
         return parent::beforeAction($action);
