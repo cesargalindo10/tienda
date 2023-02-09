@@ -8,6 +8,7 @@ use app\models\Seccion;
 use Yii;
 use yii\data\Pagination;
 use Exception;
+use yii\db\IntegrityException;
 
 class ProductoController extends \yii\web\Controller
 {
@@ -18,6 +19,9 @@ class ProductoController extends \yii\web\Controller
             "class" => \yii\filters\VerbFilter::class,
             "actions" => [
                 "index" => ["get"],
+                "create" => ["post"],
+                "update" => ["put"],
+                "delete" => ["post","delete"],
                 "seccion-producto" => ["get"],
                 "suma-stock" => ["get"],
                 "max-stock"  => ["get"],
@@ -31,7 +35,7 @@ class ProductoController extends \yii\web\Controller
     }
     public function beforeAction($action)
     {
-        
+
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
         return parent::beforeAction($action);
@@ -41,7 +45,7 @@ class ProductoController extends \yii\web\Controller
     {
         $productos = Producto::find();
         $paginacion = new Pagination([
-            'defaultPageSize' => 7,
+            'defaultPageSize' => 10,
             'totalCount' => $productos->count(),
         ]);
         $listaProducto = $productos
@@ -58,7 +62,6 @@ class ProductoController extends \yii\web\Controller
                 'paginaActual' => $paginaActual,
                 'PaginaSiguiente' => $paginaActual < $totalPaginas ? $paginaActual + 1 : null,
                 'totalPaginas' => $totalPaginas,
-                'pageSize' => 10,
                 'totalCount' => $paginacion->totalCount
             ]
         ];
@@ -66,6 +69,97 @@ class ProductoController extends \yii\web\Controller
 
         return $resultado;
     }
+    /**CRUD */
+    public function actionCreate()
+    {
+        $parametros = Yii::$app->getRequest()->getBodyParams();
+        $producto = new Producto();
+        $producto->load($parametros, '');
+        $producto->fecha_creacion = date('Y-m-s H:i:s');
+        if ($producto->save()) {
+            $resultado = [
+                'success' => true,
+                'message' => 'el producto de creo de manera exitosa',
+                'data' => $producto
+
+            ];
+        } else {
+            $resultado = [
+                'success' => false,
+                'message' => 'fallo al crear producto',
+                'data' => $producto->errors
+
+            ];
+        }
+        return $resultado;
+    }
+
+    public function actionUpdate($idProducto)
+    {
+        $parametros = Yii::$app->getRequest()->getBodyParams();
+        $producto = Producto::findOne($idProducto);
+        if ($producto) {
+            $producto->load($parametros, '');
+            if ($producto->save()) {
+                $resultado = [
+                    'success' => true,
+                    'message' => 'se actualizo de manera correcta',
+                    'data' => $producto
+                ];
+            } else {
+                Yii::$app->getResponse()->setStatusCode(422, 'Data Validation Failed.');
+                $resultado = [
+                    'success' => false,
+                    'message' => 'falle al actualizar',
+                    'data' => $producto->errors
+                ];
+            }
+        }else{
+            $resultado = [
+                'success' => false,
+                'message' => 'Producto no encontrado',
+                
+            ];
+        }
+
+        return $resultado;
+    }
+    public function actionDelete($idProducto){
+        $producto = Producto::findOne($idProducto);
+        if($producto){
+            try{
+                $producto->delete();
+                $resultado = [
+                    'success' => true,
+                    'message' => 'El producto fue eliminado '
+                ];
+
+            }catch(IntegrityException $ie){
+                Yii::$app->getResponse()->setStatusCode(500);
+                $resultado = [
+                    'message' =>'El producto esta siendo usado',
+                    'code' => $ie->getCode() 
+                ];
+
+            }catch(Exception $e){
+                    Yii::$app->getResponse()->setStatusCode(500);
+                    $resultado = [
+                        'message'=>$e->getMessage(),
+                        'code' => $e->getCode()
+                    ];
+            }
+
+        }else{
+            $resultado = [
+                'success' => false,
+                'message' => 'Producto no encontrado',
+                
+            ];
+        }
+        return $resultado;
+    }
+
+
     /*Un servicio que devuelva una sección según su ID con todos los productos
         pertenecientes a la sección*/
     public function actionSeccionProducto($idSeccion)
@@ -102,7 +196,7 @@ class ProductoController extends \yii\web\Controller
             $resultado = [
                 'success' => true,
                 'nombre' => '',
-                'suma' =>'',
+                'suma' => '',
                 'message' => "Cantidad total de productos ",
                 'total' => $sumaStock
             ];
@@ -123,23 +217,47 @@ class ProductoController extends \yii\web\Controller
 
         $resultado = [
             'success' => true,
-            'maxima' =>'',
+            'maxima' => '',
             'message' => "Lista de productos con el mayor stock .",
             'productos' => $maxStock
         ];
         return $resultado;
     }
     /**Un servicio que verifique si un producto tiene stock (stock > 0) mandar id como parametro*/
-    public function actionExistenciaStock()
+    public function actionExistenciaStock($idProducto)
     {
 
-        $existencia = Producto::find()->where('stock>0')->all();
+        $producto = Producto::findOne($idProducto);
+        if($producto){
+            $existencia = $producto->stock > 0;
+            if($existencia){
+                $resultado = [
+                    'success' => true,
+                    'message' => "El producto cuenta con stock.",
+                    'data' => [
+                        'existencia'=> $existencia,
+                        'stock' => $producto->stock
+                    ]
+                ];
+            }else{
+                $resultado = [
+                    'success' => false,
+                    'message' => "El producto no cuenta con stock.",
+                    'data' => [
+                        'existencia'=> $existencia,
+                        'stock' => $producto->stock
+                    ]
+                ];
+            }
+            
+        }else{
+            $resultado = [
+                'success' => false,
+                'message' => "El producto fue encontrado",
 
-        $resultado = [
-            'success' => true,
-            'message' => "Lista de productos con stock > 0.",
-            'productos' => $existencia
-        ];
+            ];
+        }
+       
         return $resultado;
     }
     public function actionAsignarCategoria($producto_id, $categoria_id)
