@@ -35,7 +35,9 @@ class ProductoController extends \yii\web\Controller
     }
     public function beforeAction($action)
     {
-
+        if (Yii::$app->getRequest()->getMethod() === 'OPTIONS') {         	
+            Yii::$app->getResponse()->getHeaders()->set('Allow', 'POST GET PUT');         	Yii::$app->end();     	
+        }     	   
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         $this->enableCsrfValidation = false;
         return parent::beforeAction($action);
@@ -75,22 +77,35 @@ class ProductoController extends \yii\web\Controller
         $parametros = Yii::$app->getRequest()->getBodyParams();
         $producto = new Producto();
         $producto->load($parametros, '');
-        $producto->fecha_creacion = date('Y-m-s H:i:s');
-        if ($producto->save()) {
-            $resultado = [
-                'success' => true,
-                'message' => 'el producto de creo de manera exitosa',
-                'data' => $producto
-
-            ];
-        } else {
+        $producto->fecha_creacion = date('Y-m-d H:i:s');
+        try{
+            if ($producto->save()) {
+                Yii::$app->getResponse()->getStatusCode(201);
+                $resultado = [
+                    'success' => true,
+                    'message' => 'el producto de creo de manera exitosa',
+                    'data' => $producto
+    
+                ];
+            } else {
+                Yii::$app->getResponse()->getStatusCode(222,"Data validation failed");
+                $resultado = [
+                    'success' => false,
+                    'message' => 'fallo al crear producto',
+                    'data' => $producto->errors
+    
+                ];
+            }
+        }catch(Exception $e){
+            Yii::$app->getResponse()->getStatusCode(500);
             $resultado = [
                 'success' => false,
-                'message' => 'fallo al crear producto',
-                'data' => $producto->errors
+                'message' => 'Ocurrio un error',
+                'data' => $e->getMessage()
 
             ];
         }
+    
         return $resultado;
     }
 
@@ -100,21 +115,32 @@ class ProductoController extends \yii\web\Controller
         $producto = Producto::findOne($idProducto);
         if ($producto) {
             $producto->load($parametros, '');
-            if ($producto->save()) {
-                $resultado = [
-                    'success' => true,
-                    'message' => 'se actualizo de manera correcta',
-                    'data' => $producto
-                ];
-            } else {
-                Yii::$app->getResponse()->setStatusCode(422, 'Data Validation Failed.');
+            try{
+                if ($producto->save()) {
+                    $resultado = [
+                        'success' => true,
+                        'message' => 'se actualizo de manera correcta',
+                        'data' => $producto
+                    ];
+                } else {
+                    Yii::$app->getResponse()->setStatusCode(422, 'Data Validation Failed.');
+                    $resultado = [
+                        'success' => false,
+                        'message' => 'falle al actualizar',
+                        'data' => $producto->errors
+                    ];
+                }
+            }catch(Exception $e){
                 $resultado = [
                     'success' => false,
-                    'message' => 'falle al actualizar',
-                    'data' => $producto->errors
+                    'message' => 'Error al realizar la accion',
+                    'data' => $e->getMessage()
                 ];
             }
+            
+            
         }else{
+            Yii::$app->getResponse()->getStatusCode(404);
             $resultado = [
                 'success' => false,
                 'message' => 'Producto no encontrado',
@@ -135,21 +161,24 @@ class ProductoController extends \yii\web\Controller
                 ];
 
             }catch(IntegrityException $ie){
-                Yii::$app->getResponse()->setStatusCode(500);
+                Yii::$app->getResponse()->setStatusCode(409);
                 $resultado = [
+                    'success' => false,
                     'message' =>'El producto esta siendo usado',
                     'code' => $ie->getCode() 
                 ];
 
             }catch(Exception $e){
-                    Yii::$app->getResponse()->setStatusCode(500);
+                    Yii::$app->getResponse()->setStatusCode(422,'Data validation failed');
                     $resultado = [
+                        'success' => false,
                         'message'=>$e->getMessage(),
                         'code' => $e->getCode()
                     ];
             }
 
         }else{
+            Yii::$app->getResponse()->getStatusCode(404);
             $resultado = [
                 'success' => false,
                 'message' => 'Producto no encontrado',

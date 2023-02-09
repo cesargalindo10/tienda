@@ -94,10 +94,10 @@ class Producto extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Seccion::class, ['id' => 'seccion_id']);
     }
+
     public function getCategorias()
     {
         return $this->hasMany(Categoria::class, ['id' => 'categoria_id'])
             ->viaTable('producto_categoria', ['producto_id' => 'id']);
     }
-
 }
