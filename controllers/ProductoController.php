@@ -1,7 +1,6 @@
 <?php
 
 namespace app\controllers;
-
 use app\models\Categoria;
 use app\models\Producto;
 use app\models\Seccion;
@@ -19,6 +18,7 @@ class ProductoController extends \yii\web\Controller
             "class" => \yii\filters\VerbFilter::class,
             "actions" => [
                 "index" => ["get"],
+                "view" => ["get"],
                 "create" => ["post"],
                 "update" => ["put"],
                 "delete" => ["post","delete"],
@@ -69,6 +69,22 @@ class ProductoController extends \yii\web\Controller
         ];
 
 
+        return $resultado;
+    }
+    public function actionView($id){
+        $producto = Producto::findOne($id);
+        if($producto){
+            $resultado=[
+                'success'=> true,
+                'data' => $producto
+            ];
+        }else{
+            $resultado=[
+                'success'=> false,
+                'message' => 'Producto no encontrado' 
+            ];
+        }
+       
         return $resultado;
     }
     /**CRUD */
