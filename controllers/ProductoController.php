@@ -45,6 +45,7 @@ class ProductoController extends \yii\web\Controller
 
     public function actionIndex()
     {
+        //orderby
         $productos = Producto::find();
         $paginacion = new Pagination([
             'defaultPageSize' => 10,
