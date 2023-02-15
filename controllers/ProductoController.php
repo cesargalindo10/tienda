@@ -3,6 +3,7 @@
 namespace app\controllers;
 use app\models\Categoria;
 use app\models\Producto;
+use app\models\ProductoCategoria;
 use app\models\Seccion;
 use Yii;
 use yii\data\Pagination;
@@ -27,7 +28,8 @@ class ProductoController extends \yii\web\Controller
                 "max-stock"  => ["get"],
                 "existencia-stock" => ["get"],
                 "asignar-categoria" => ["get"],
-                "quitar-categoria" => ["get"]
+                "quitar-categoria" => ["get"],
+                "get-categoria" => ["get"]
 
             ]
         ];
@@ -57,7 +59,7 @@ class ProductoController extends \yii\web\Controller
             ->all();
         $paginaActual = $paginacion->getPage() + 1;
         $totalPaginas = $paginacion->getPageCount();
-        $resultado = [
+        $resultado = [  
             'success' => true,
             'data' => $listaProducto,
             'pagination' => [
@@ -353,6 +355,7 @@ class ProductoController extends \yii\web\Controller
         }
         return $resultado;
     }
+  
     public function actionQuitarCategoria($producto_id, $categoria_id)
     {
 
@@ -394,6 +397,14 @@ class ProductoController extends \yii\web\Controller
 
             throw new \yii\web\NotFoundHttpException('Producto no encontrado.');
         }
+        return $resultado;
+    }
+    public function actionGetCategoria($id){
+        $categoria = ProductoCategoria::find()->where("producto_id=$id")->all();
+        $resultado = [
+            'success'=> true,
+            'data' => $categoria
+        ];
         return $resultado;
     }
 }
