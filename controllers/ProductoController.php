@@ -5,9 +5,11 @@ use app\models\Categoria;
 use app\models\Producto;
 use app\models\ProductoCategoria;
 use app\models\Seccion;
+use Codeception\Command\Console;
 use Yii;
 use yii\data\Pagination;
 use Exception;
+use PhpParser\Node\Expr\Print_;
 use yii\db\IntegrityException;
 
 class ProductoController extends \yii\web\Controller
@@ -169,7 +171,21 @@ class ProductoController extends \yii\web\Controller
 
         return $resultado;
     }
+
     public function actionDelete($idProducto){
+        $res = $this->actionGetCategoria($idProducto);
+        $arr = $res['data'];
+        //$aux=$arr[0];
+        
+     
+        
+   
+        for($i=0;$i<sizeof($arr);$i++){
+          //$res1 = $this->actionQuitarCategoria($idProducto,$arr[$i]->id);
+          print_r($idProducto);
+          
+        }
+        exit();
         $producto = Producto::findOne($idProducto);
         if($producto){
             try{
@@ -206,7 +222,14 @@ class ProductoController extends \yii\web\Controller
         }
         return $resultado;
     }
-
+    public function actionGetCategoria($id){
+        $categoria = ProductoCategoria::find()->where("producto_id=$id")->all();
+        $resultado = [
+            'success'=> true,
+            'data' => $categoria
+        ];
+        return $resultado;
+    }
 
     /*Un servicio que devuelva una sección según su ID con todos los productos
         pertenecientes a la sección*/
@@ -399,12 +422,5 @@ class ProductoController extends \yii\web\Controller
         }
         return $resultado;
     }
-    public function actionGetCategoria($id){
-        $categoria = ProductoCategoria::find()->where("producto_id=$id")->all();
-        $resultado = [
-            'success'=> true,
-            'data' => $categoria
-        ];
-        return $resultado;
-    }
+
 }
