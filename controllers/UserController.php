@@ -13,13 +13,37 @@ class UserController extends \yii\web\Controller
         //…    
 
         // add Bearer authentication filter     	
-        $behaviors["verbs"] = [
-            "class" => \yii\filters\VerbFilter::class,
-            "actions" => [
-                "login" => ["post"],
-                
-            ]
-        ];
+        $behaviors['access'] = [         	
+            'class' => \yii\filters\AccessControl::class,
+            'only' => ['actions'], // acciones a las que se aplicará el control
+            'except' => ['actions'],	// acciones a las que no se aplicará el control
+            'rules' => [
+                [
+                    'allow' => true, // permitido o no permitido
+                    'actions' => ['acciones'], // acciones que siguen esta regla
+                    'roles' => ['roles y/o permisos'] // control por roles  permisos
+            ],
+            [
+                    'allow' => true, // permitido o no permitido
+                    'actions' => ['acciones'], // acciones que siguen esta regla
+                    'matchCallback' => function ($rule, $action) {
+            // control personalizado
+                                        return true;
+                                    }
+            ],
+            [
+                    'allow' => true, // permitido o no permitido
+                    'actions' => ['acciones'], // acciones que siguen esta regla
+                    'matchCallback' => function ($rule, $action) {
+            // control personalizado equivalente a ‘@’ de usuario 
+            // autenticado
+                    return Yii::$app->user->identity ? true : false;
+                }
+            ],
+                //…
+            ],
+             ];
+            
 
         //…
         return $behaviors;
@@ -87,12 +111,14 @@ class UserController extends \yii\web\Controller
             if( $user ){
                 if(Yii::$app->security->validatePassword($password, $user->password_hash)){
                     $auth = Yii::$app->authManager;
-                   // $permissions = $auth->getPermissionsByUser($user->id);
+                   $permissions = $auth->getPermissionsByUser($user->id);
+                   $rol = $auth->getRolesByUser($user->id);
                     $response = [
                         "success" => true,
                         "message" => "Inicio de sesión exitoso",
                         "accessToken" => $user->access_token,
-                       // "permissions" => $permissions
+                       "permissions" => $permissions,
+                       "rol"=>$rol
                     ];
                     return $response;
                 }
@@ -113,6 +139,31 @@ class UserController extends \yii\web\Controller
                      
         }
         return $response;
+    }
+    public function actionCreatePermisos(){
+        $auth = Yii::$app->authManager;
+
+        // Crear un permiso
+        $permission = $auth->createPermission('editarUsuarios');
+        $permission->description = 'Editar usuarios';
+        $auth->add($permission); // Guardar el permiso
+
+    }
+    public function actionCreateRol(){
+        $auth = Yii::$app->authManager;
+        $role = $auth->createRole('Cajero');
+        $auth->add($role);
+
+    }
+    public function actionAsignarRol(){
+        $auth = Yii::$app->authManager;
+
+        //$role = $auth->getRole('administrador');
+        //$auth->assign($role, 8); // Asigna el rol Administrador al usuario con ID 8
+
+        $permission = $auth->getPermission('crearUsuarios');
+        $auth->assign($permission, 2); // Asigna el permiso crearUsuarios al usuario con ID 6
+
     }
     public function actionIndex()
     {
