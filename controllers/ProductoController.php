@@ -178,14 +178,16 @@ class ProductoController extends \yii\web\Controller
         //$aux=$arr[0];
         
      
-        
-   
-        for($i=0;$i<sizeof($arr);$i++){
-          //$res1 = $this->actionQuitarCategoria($idProducto,$arr[$i]->id);
-          print_r($idProducto);
+        if($arr!=null){
+            print_r($arr[0]->id);
+            for($i=0;$i<sizeof($arr);$i++){
+            $res1 = $this->actionQuitarCategoria($idProducto,$arr[$i]->categoria_id);
           
+          //exit();
         }
-        exit();
+        }
+        
+        
         $producto = Producto::findOne($idProducto);
         if($producto){
             try{

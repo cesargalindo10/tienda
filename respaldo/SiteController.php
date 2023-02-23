@@ -16,26 +16,19 @@ class SiteController extends Controller
      * {@inheritdoc}
      */
     public function behaviors()
-    { return [
-        'access' => [
-            'class' => AccessControl::class,
-            'only' => ['login', 'logout', 'signup'],
-            'rules' => [
-                [
-                    'allow' => true,
-                    'actions' => ['login', 'signup'],
-                    'roles' => ['?'],
-                ],
-                [
-                    'allow' => true,
-                    'actions' => ['logout'],
-                    'roles' => ['@'],
-                ],
-            ],
-        ],
-    ];
-}
-    
+    {
+        $behaviors = parent::behaviors();  
+        //…    
+            
+        // add Bearer authentication filter     	
+        $behaviors['authenticator'] = [         	
+        'class' => \yii\filters\auth\HttpBearerAuth::class,         	
+        'except' => ['options']     	
+        ];
+        
+        //…
+            return $behaviors; 	
+    }
     
 
     /**
