@@ -15,13 +15,13 @@ class UserController extends \yii\web\Controller
         // add Bearer authentication filter     	
         $behaviors['access'] = [         	
             'class' => \yii\filters\AccessControl::class,
-            'only' => ['actions'], // acciones a las que se aplicará el control
+            'only' => ['actionCreateUser'], // acciones a las que se aplicará el control
             'except' => ['actions'],	// acciones a las que no se aplicará el control
             'rules' => [
                 [
                     'allow' => true, // permitido o no permitido
-                    'actions' => ['acciones'], // acciones que siguen esta regla
-                    'roles' => ['roles y/o permisos'] // control por roles  permisos
+                    'actions' => ['actionCreateUser'], // acciones que siguen esta regla
+                    'roles' => ['administrador','crearUsuarios'] // control por roles  permisos
             ],
             [
                     'allow' => true, // permitido o no permitido
